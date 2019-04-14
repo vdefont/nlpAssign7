@@ -1,0 +1,5 @@
+positive  a b c
+positive  b c d
+negative  a e f
+negative  d e f
+negative  g g g
