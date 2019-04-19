@@ -1,3 +1,9 @@
+/**
+Sarp Misoglu
+Victor de Fontnouvelle
+4/18/2019
+*/
+
 import java.util.*;
 import java.io.*;
 
@@ -26,6 +32,88 @@ public class Classifier {
     test(testData, lambda);
   }
 
+  class WordAndProb implements Comparable<WordAndProb> {
+    private Double prob;
+    private String word;
+    public WordAndProb(String word, Double prob) {
+      this.word = word;
+      this.prob = prob;
+    }
+    public Double getProb () {
+      return prob;
+    }
+    public String getWord () {
+      return word;
+    }
+    @Override
+    public int compareTo(WordAndProb other) {
+      return prob.compareTo(other.getProb());
+    }
+  }
+
+  // Print the most predictive features
+  // Useful for writeup question 3
+  private void mostPredictiveFeats () {
+
+    List<WordAndProb> predicts = new ArrayList<>();
+
+    for (String word : posMap.keySet()) {
+      // Must be in both maps
+      if (!negMap.containsKey(word)) continue;
+
+      double posProb = ((double) posMap.get(word)) / ((double) posTotalWords);
+      double negProb = ((double) negMap.get(word)) / ((double) negTotalWords);
+
+      double predict = posProb / negProb;
+      predicts.add(new WordAndProb(word, predict));
+    }
+
+    Collections.sort(predicts);
+
+    // Get top posPredicts
+    System.out.println("Top negative predictors:");
+    for (int i = 0; i < 10; i += 1) {
+      WordAndProb wap = predicts.get(i);
+      double prob = 1 / wap.getProb();
+      System.out.println(wap.getWord() + " -- " + prob);
+    }
+    System.out.println("\n\nTop positive predictors:");
+    for (int i = 0; i < 10; i += 1) {
+      int j = predicts.size() - 1 - i;
+      WordAndProb wap = predicts.get(j);
+      System.out.println(wap.getWord() + " -- " + wap.getProb());
+    }
+
+  }
+
+  // Prints all probs from training data
+  // Useful for writeup question 2
+  private void printProbs () {
+    double p = posNum;
+    double n = negNum;
+    double pn = posNum + negNum;
+    double pp = p / pn;
+    double nn = n / pn;
+    System.out.println("Pos prob: " + pp);
+    System.out.println("Neg prob: " + nn);
+
+    System.out.println("Pos:");
+    for (String s : vocab) {
+      double num = posMap.get(s);
+      double denom = posTotalWords;
+      double prob = num / denom;
+      System.out.println(s + " -- " + prob);
+    }
+
+    System.out.println("Neg:");
+    for (String s : vocab) {
+      double num = negMap.get(s);
+      double denom = negTotalWords;
+      double prob = num / denom;
+      System.out.println(s + " -- " + prob);
+    }
+  }
+
   private void test (String testData, double lambda) {
     try {
       Scanner sc = new Scanner(new File(testData));
@@ -34,6 +122,7 @@ public class Classifier {
         String line = sc.nextLine();
         System.out.println(classify(line, lambda));
       }
+
     } catch (IOException e) {
       System.out.println("Error reading test data");
     }
@@ -60,7 +149,6 @@ public class Classifier {
         negSum += Math.log10(negProb);
     }
 
-    // return ("positive\t" + posSum) + "\t\t" + ("negative\t" + negSum);
     return posSum >= negSum ? ("positive\t" + posSum) : ("negative\t" + negSum);
   }
 
@@ -100,7 +188,7 @@ public class Classifier {
   }
 
   public static void main (String[] args) {
-    new Classifier("movies.data", "testData", 0.01);
+    new Classifier(args[0], args[1], new Double(args[2]));
   }
 
 }
